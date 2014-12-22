@@ -28,7 +28,7 @@ public class ECGSignalHandler extends Thread {
     private List<Double> derivative = new ArrayList<Double>();
     private List<Double> squaring = new ArrayList<Double>();
     private List<Double> movingWindowIntegration = new ArrayList<Double>();
-    public List<Double> RRPeaks = new ArrayList<Double>();
+    public  List<Double> RRPeaks = new ArrayList<Double>();
     private List<Integer> RRPeaksIndex = new ArrayList<Integer>();
 
     private NavigableMap<Integer, Double> QRSPeaks = new TreeMap<Integer, Double>();
@@ -50,9 +50,7 @@ public class ECGSignalHandler extends Thread {
         for (int i = 0; i< signal.size(); i++) {
             RRPeaks.add(0.0);
         }
-        for ( Integer index: QRSPeaks.keySet()) {
-            RRPeaks.set(index,QRSPeaks.get(index));
-        }
+        addRRPeaks();
         System.out.println("Peaks:");
         for (Integer index : QRSPeaks.keySet()) {
             System.out.println("  " + index + " -> " + QRSPeaks.get(index));
@@ -145,7 +143,7 @@ public class ECGSignalHandler extends Thread {
         int n = squaring.size() - 1;
         Double sum = 0.0;
         if (n >= integrationWindowWidth) {
-            for (int i = n; i >= n - (integrationWindowWidth - 1); --i) {
+            for (int i = n; i >= n - (integrationWindowWidth - 1); i--) {
                 sum += squaring.get(i);
             }
             sum /= integrationWindowWidth;
@@ -222,7 +220,7 @@ public class ECGSignalHandler extends Thread {
             if (PEAKI >= THRESHOLD1) {
                 SPKI = 0.125 * PEAKI + 0.875 * SPKI;
 
-                for (int i = peakIndex - integrationWindowWidth; i < peakIndex; ++i) {
+                for (int i = peakIndex - integrationWindowWidth; i < peakIndex; i++) {
                     if ((signal.get(i - 1) > signal.get(i - 2)) && (signal.get(i) < signal.get(i - 1)) && (signal.get(i - 1) > 10 * Math.sqrt(THRESHOLD1))) {
                         QRSPeaks.put(i, signal.get(i - 1));
                         // RRPeaks.add(signal.get(i-1));
@@ -235,6 +233,15 @@ public class ECGSignalHandler extends Thread {
             }
             THRESHOLD1 = NPKI + 0.25 * (SPKI - NPKI);
         }
+    }
+
+
+    private void addRRPeaks() {
+        //for (  int i = 0; i< RRPeaks.size()-1; i++) {
+               for( Integer index: QRSPeaks.keySet()) {
+            Double d = RRPeaks.set(index,QRSPeaks.get(index));
+            GUIQueue1.add(d); }
+
     }
 
 }

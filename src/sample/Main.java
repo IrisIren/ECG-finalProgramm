@@ -21,7 +21,7 @@ public class Main extends Application {
     private static ConcurrentLinkedQueue<Double> dataQ = new ConcurrentLinkedQueue<Double>();
     private static ConcurrentLinkedQueue<Double> RRPeaks = new ConcurrentLinkedQueue<Double>();
     private XYChart.Series<Number, Number> series1;
-    private Series series2;
+    private XYChart.Series<Number, Number> series2;
     private int xSeriesData;
 
     private NumberAxis xAxis;
@@ -48,18 +48,17 @@ public class Main extends Application {
         series1 = new AreaChart.Series<Number, Number>();
         series1.setName("realtime ECG graph");
         sc.getData().add(series1);
-        series2 = new Series<Number, Number>();   //Chart.Series<Number, Number>();
-                //AreaChart.Series<Number, Number>();
-        series2.setName("series2");
-        ObservableList<XYChart.Data> datas = FXCollections.observableArrayList();
-        datas.add(new XYChart.Data(400, 300));
-        datas.add(new XYChart.Data(500, 400));
-        series2.setData(datas);
 
+        series2 = new Series<Number, Number>();
+        series2 = new AreaChart.Series<Number, Number>();
+        series2.setName("RRPeaks");
         sc.getData().add(series2);
-        //sc.getData().add(new XYChart.Data(400.0,10.0));
-       // sc.getData().add(new XYChart<>());
+        //ObservableList<XYChart.Data> datas = FXCollections.observableArrayList();
+        //datas.add(new XYChart.Data(400, 300));
+       // datas.add(new XYChart.Data(500, 400));
+        //series2.setData(datas);
 
+        //sc.getData().add(series2);
         primaryStage.setScene(new Scene(sc));
     }
 
