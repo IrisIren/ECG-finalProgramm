@@ -34,6 +34,7 @@ public class ECGSignalHandler extends Thread {
     private NavigableMap<Integer, Double> QRSPeaks = new TreeMap<Integer, Double>();
     private List<Integer> QRSPeakCoordinates = new ArrayList<Integer>();
 
+    private Double p = 0.0;
     ECGSignalHandler(BlockingQueue<Double> queue, ConcurrentLinkedQueue<Double> GUIQueue, ConcurrentLinkedQueue<Double> GUIQueue1, AtomicBoolean fileIsFinished) {
         this.GUIQueue = GUIQueue;
         this.GUIQueue1 = GUIQueue1;
@@ -47,17 +48,17 @@ public class ECGSignalHandler extends Thread {
         while (!fileIsFinished.get() || !queue.isEmpty()) {
             otherPeaks();
         }
-        for (int i = 0; i< signal.size(); i++) {
-            RRPeaks.add(0.0);
-        }
-        addRRPeaks();
+        //for (int i = 0; i< signal.size(); i++) {
+        //    RRPeaks.add(0.0);
+        //}
+        //addRRPeaks();
         System.out.println("Peaks:");
         for (Integer index : QRSPeaks.keySet()) {
             System.out.println("  " + index + " -> " + QRSPeaks.get(index));
         }
 
         for (int i = 1; i < RRPeaks.size(); i++) {
-            System.out.println("Peaksjfnjkdsnj:" + RRPeaks.get(i));
+            System.out.println("List with peaks and zeros:" + RRPeaks.get(i));
         }
 
         for (Integer integer : QRSPeaks.keySet()) {
@@ -173,6 +174,7 @@ public class ECGSignalHandler extends Thread {
         double sample = 500;
         while ((movingWindowIntegration.size() < sample) && (!fileIsFinished.get() || !queue.isEmpty())) {
             stepping();
+           //GUIQueue1.add(0.0);
         }
         double firstQRSPeak = 0;
         int firstQRSPeakIndex = 0;
@@ -180,18 +182,20 @@ public class ECGSignalHandler extends Thread {
             if (movingWindowIntegration.get(i) > firstQRSPeak) {
                 firstQRSPeak = movingWindowIntegration.get(i);
                 firstQRSPeakIndex = i;
+                Double p = i*1.0;
             }
-        }
-        for (int i = 0; i < signal.size(); i++) {
-            RRPeaks.add(0.0);
+           GUIQueue1.add(p);
+            ;
         }
 
 
         for (int i = firstQRSPeakIndex - integrationWindowWidth; i < firstQRSPeakIndex; i++) {
             if ((signal.get(i - 1) > signal.get(i - 2)) && (signal.get(i) < signal.get(i - 1))) {
                 QRSPeaks.put(i, signal.get(i - 1));
-                RRPeaks.add(signal.get(i - 1));
+                //RRPeaks.add(signal.get(i - 1));
                 RRPeaksIndex.add(signal.size() - 2);
+                Double p = i*1.0;
+                GUIQueue1.add(p);
                 break;
             }
         }
@@ -224,7 +228,9 @@ public class ECGSignalHandler extends Thread {
                     if ((signal.get(i - 1) > signal.get(i - 2)) && (signal.get(i) < signal.get(i - 1)) && (signal.get(i - 1) > 10 * Math.sqrt(THRESHOLD1))) {
                         QRSPeaks.put(i, signal.get(i - 1));
                         // RRPeaks.add(signal.get(i-1));
-                        // RRPeaksIndex.add(signal.size()-2);
+                       // RRPeaksIndex.add(i-1);
+                        Double p = i*1.0;
+                        GUIQueue1.add(p);
                         break;
                     }
                 }
@@ -233,15 +239,18 @@ public class ECGSignalHandler extends Thread {
             }
             THRESHOLD1 = NPKI + 0.25 * (SPKI - NPKI);
         }
+        else {
+           // b                                                                                                                                GUIQueue1.add(i);
+        }
     }
 
 
-    private void addRRPeaks() {
+   /* private void addRRPeaks() {
         //for (  int i = 0; i< RRPeaks.size()-1; i++) {
                for( Integer index: QRSPeaks.keySet()) {
             Double d = RRPeaks.set(index,QRSPeaks.get(index));
             GUIQueue1.add(d); }
 
-    }
+    }*/
 
 }

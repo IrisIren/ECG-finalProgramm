@@ -6,6 +6,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.chart.AreaChart;
+import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Series;
@@ -20,8 +21,8 @@ public class Main extends Application {
     private static final int MAX_FRAME_POINTS = 4000;
     private static ConcurrentLinkedQueue<Double> dataQ = new ConcurrentLinkedQueue<Double>();
     private static ConcurrentLinkedQueue<Double> RRPeaks = new ConcurrentLinkedQueue<Double>();
-    private XYChart.Series<Number, Number> series1;
-    private XYChart.Series<Number, Number> series2;
+    private XYChart.Series<Number, Number> ecgSeries;
+    private XYChart.Series<Number, Number> rPeakSeries;
     private int xSeriesData;
 
     private NumberAxis xAxis;
@@ -35,30 +36,19 @@ public class Main extends Application {
         yAxis.setForceZeroInRange(true);
         yAxis.setAutoRanging(true);
 
-        final AreaChart<Number, Number> sc = new AreaChart<Number, Number>(xAxis, yAxis) {
-            @Override
-            protected void dataItemAdded(Series<Number, Number> series, int itemIndex, Data<Number, Number> item) {
-            }
-        };
+        final LineChart<Number, Number> sc = new LineChart<>(xAxis, yAxis);
 
         sc.setAnimated(false);
         sc.setId("realtime ECG graph");
         sc.setTitle("ECG-signal");
         sc.getStylesheets().add(Main.class.getResource("chart.css").toExternalForm());
-        series1 = new AreaChart.Series<Number, Number>();
-        series1.setName("realtime ECG graph");
-        sc.getData().add(series1);
+        ecgSeries = new LineChart.Series<>();
+        ecgSeries.setName("realtime ECG graph");
+        sc.getData().add(ecgSeries);
 
-        series2 = new Series<Number, Number>();
-        series2 = new AreaChart.Series<Number, Number>();
-        series2.setName("RRPeaks");
-        sc.getData().add(series2);
-        //ObservableList<XYChart.Data> datas = FXCollections.observableArrayList();
-        //datas.add(new XYChart.Data(400, 300));
-       // datas.add(new XYChart.Data(500, 400));
-        //series2.setData(datas);
-
-        //sc.getData().add(series2);
+        rPeakSeries = new LineChart.Series<>();
+        rPeakSeries.setName("RRPeaks");
+        sc.getData().add(rPeakSeries);
         primaryStage.setScene(new Scene(sc));
     }
 
@@ -76,7 +66,7 @@ public class Main extends Application {
         AtomicBoolean fileIsFinished = new AtomicBoolean(false);
         BlockingQueue<Double> queue = new LinkedBlockingQueue<Double>();
 
-        BluetoothModelReceiver bluetoothModelReceiver = new BluetoothModelReceiver(queue, "D:\\ECG.txt", fileIsFinished);
+        BluetoothModelReceiver bluetoothModelReceiver = new BluetoothModelReceiver(queue, "C:\\Users\\Ирина\\IdeaProjects\\ECG-finalProgramm\\src\\sample\\ECG.txt", fileIsFinished);
         bluetoothModelReceiver.start();
 
         ECGSignalHandler ecgSignalHandler = new ECGSignalHandler(queue, dataQ, RRPeaks, fileIsFinished);
@@ -96,16 +86,18 @@ public class Main extends Application {
     private void addDataToSeries() {
         for (int i = 0; i < MAX_FRAME_POINTS / 50; i++) {
             if (dataQ.isEmpty()) break;
-            series1.getData().add(new AreaChart.Data<Number, Number>(xSeriesData++, dataQ.remove()));
+            ecgSeries.getData().add(new LineChart.Data<>(xSeriesData++, dataQ.remove()));
         }
 
-        for (int i = 0; i < MAX_FRAME_POINTS / 50; i++) {
-            if (RRPeaks.isEmpty()) break;
-            series2.getData().add(new AreaChart.Data<Number, Number>(xSeriesData++, RRPeaks.remove()));
+        Double[] dArray = RRPeaks.toArray(new Double[RRPeaks.size()]);
+        for (int i = 1; i < dArray.length; i++) {
+            //if (dArray[i] = 0.0)
+                rPeakSeries.getData().add(new LineChart.Data<>(dArray[i], 1500));
+
         }
 
-        if (series1.getData().size() > MAX_FRAME_POINTS) {
-            series1.getData().remove(0, series1.getData().size() - MAX_FRAME_POINTS);
+        if (ecgSeries.getData().size() > MAX_FRAME_POINTS) {
+            ecgSeries.getData().remove(0, ecgSeries.getData().size() - MAX_FRAME_POINTS);
         }
         xAxis.setLowerBound(Math.max(xSeriesData - MAX_FRAME_POINTS, 0));
         xAxis.setUpperBound(Math.max(xSeriesData - 1, MAX_FRAME_POINTS));
